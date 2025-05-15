@@ -43,37 +43,40 @@ int readRecord(FILE *fp, STUDENT *s, int rrn) {
 
 // 함수 unpack: recordbuf에 저장된 레코드에서 각 필드 추출
 void unpack(const char *recordbuf, STUDENT *s) {
+    char field[5][31]; // 각 필드를 저장할 임시 배열
+    char *token;
+    int idx = 0;
     char temp[RECORD_SIZE + 1];
     strncpy(temp, recordbuf, RECORD_SIZE);
     temp[RECORD_SIZE] = '\0';
 
-    char *token;
-    int idx = 0;
     token = strtok(temp, "#");
-    if (token != NULL) {
-        strncpy(s->sid, token, sizeof(s->sid) - 1);
-        s->sid[sizeof(s->sid) - 1] = '\0';
+    while (token != NULL && idx < 5) {
+        // 1) 토큰 복사
+        strncpy(field[idx], token, sizeof(field[idx]) - 1);
+        field[idx][sizeof(field[idx]) - 1] = '\0';
+
+        // 2) 뒤쪽 공백(trim) 제거
+        int len = strlen(field[idx]);
+        while (len > 0 && field[idx][len-1] == ' ') {
+            field[idx][--len] = '\0';
+        }
+
+        idx++;
         token = strtok(NULL, "#");
     }
-    if (token != NULL) {
-        strncpy(s->name, token, sizeof(s->name) - 1);
-        s->name[sizeof(s->name) - 1] = '\0';
-        token = strtok(NULL, "#");
-    }
-    if (token != NULL) {
-        strncpy(s->dept, token, sizeof(s->dept) - 1);
-        s->dept[sizeof(s->dept) - 1] = '\0';
-        token = strtok(NULL, "#");
-    }
-    if (token != NULL) {
-        strncpy(s->addr, token, sizeof(s->addr) - 1);
-        s->addr[sizeof(s->addr) - 1] = '\0';
-        token = strtok(NULL, "#");
-    }
-    if (token != NULL) {
-        strncpy(s->email, token, sizeof(s->email) - 1);
-        s->email[sizeof(s->email) - 1] = '\0';
-    }
+
+    // 필드 값을 STUDENT 구조체에 복사
+    strncpy(s->sid, field[0], sizeof(s->sid) - 1);
+    s->sid[sizeof(s->sid) - 1] = '\0';
+    strncpy(s->name, field[1], sizeof(s->name) - 1);
+    s->name[sizeof(s->name) - 1] = '\0';
+    strncpy(s->dept, field[2], sizeof(s->dept) - 1);
+    s->dept[sizeof(s->dept) - 1] = '\0';
+    strncpy(s->addr, field[3], sizeof(s->addr) - 1);
+    s->addr[sizeof(s->addr) - 1] = '\0';
+    strncpy(s->email, field[4], sizeof(s->email) - 1);
+    s->email[sizeof(s->email) - 1] = '\0';
 }
 
 // 함수 writeRecord: 학생 레코드 파일에 주어진 rrn에 해당하는 위치에 레코드 저장 (C library 사용)
@@ -167,6 +170,12 @@ void search(FILE *fp, enum FIELD f, char *keyval) {
             case DEPT:
                 if (strcmp(temp.dept, keyval) == 0) match = 1;
                 break;
+            case ADDR:
+                if (strcmp(temp.addr, keyval) == 0) match = 1;
+                break;
+            case EMAIL:
+                if (strcmp(temp.email, keyval) == 0) match = 1;
+                break;
             default:
                 break;
         }
@@ -194,6 +203,8 @@ enum FIELD getFieldID(char *fieldname) {
     if (strcmp(fieldname, "SID") == 0) return SID;
     else if (strcmp(fieldname, "NAME") == 0) return NAME;
     else if (strcmp(fieldname, "DEPT") == 0) return DEPT;
+    else if (strcmp(fieldname, "ADDR") == 0) return ADDR;
+    else if (strcmp(fieldname, "EMAIL") == 0) return EMAIL;
     else return -1;
 }
 
